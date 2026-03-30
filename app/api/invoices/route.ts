@@ -166,6 +166,7 @@ export async function GET(req: Request) {
     let totalRefundAmount = 0
     let totalVat19 = 0
     let totalVat7 = 0
+    let totalShopifyFees = 0
     let paidInvoicesCount = 0
     let openInvoicesCount = 0
     let overdueInvoicesCount = 0
@@ -174,6 +175,36 @@ export async function GET(req: Request) {
     let totalAmount = 0
 
     const normalizeStatus = (s: string) => s?.toUpperCase().trim() || ''
+
+    // Calculate Shopify Payments fees for paid invoices using Shopify Payments
+    // Shopify Payments typically charges: 2.9% + €0.30 per transaction
+    const shopifyPaymentInvoices = await prisma.invoice.findMany({
+      where: {
+        ...statsWhere,
+        paymentMethod: { in: ['Shopify Payments', 'shopify_payments'] },
+        status: 'PAID'
+      },
+      select: {
+        id: true,
+        totalGross: true,
+        settings: true
+      }
+    })
+
+    // Calculate and sum Shopify fees
+    for (const inv of shopifyPaymentInvoices) {
+      const settings = (inv.settings as any) || {}
+      
+      // Check if fee is already stored in settings
+      if (settings.shopifyPaymentsFee && typeof settings.shopifyPaymentsFee === 'number') {
+        totalShopifyFees += settings.shopifyPaymentsFee
+      } else {
+        // Calculate using standard Shopify Payments rate: 2.9% + €0.30
+        const grossAmount = Number(inv.totalGross)
+        const calculatedFee = (grossAmount * 0.029) + 0.30
+        totalShopifyFees += calculatedFee
+      }
+    }
 
     for (const group of statusCounts) {
       const s = normalizeStatus(group.status as any)
@@ -289,7 +320,8 @@ export async function GET(req: Request) {
         cancelledInvoicesCount,
         refundInvoicesCount,
         totalVat19,
-        totalVat7
+        totalVat7,
+        totalShopifyFees
       }
     })
 

@@ -394,6 +394,7 @@ function InvoicesPageContent() {
   const [globalTotalCount, setGlobalTotalCount] = useState(0)
   const [vat19Sum, setVat19Sum] = useState(0)
   const [vat7Sum, setVat7Sum] = useState(0)
+  const [totalShopifyFees, setTotalShopifyFees] = useState(0)
   const [totalPaidAmount, setTotalPaidAmount] = useState(0)
   const [totalRefundAmount, setTotalRefundAmount] = useState(0)
 
@@ -673,6 +674,7 @@ function InvoicesPageContent() {
         setVat7Sum(typeof data.stats.totalVat7 === 'number' ? data.stats.totalVat7 : 0)
         setTotalPaidAmount(typeof data.stats.totalPaidAmount === 'number' ? data.stats.totalPaidAmount : 0)
         setTotalRefundAmount(typeof data.stats.totalRefundAmount === 'number' ? data.stats.totalRefundAmount : 0)
+        setTotalShopifyFees(typeof data.stats.totalShopifyFees === 'number' ? data.stats.totalShopifyFees : 0)
 
         // Set counts
         setPaidInvoicesCount(typeof data.stats.paidInvoicesCount === 'number' ? data.stats.paidInvoicesCount : 0)
@@ -685,6 +687,7 @@ function InvoicesPageContent() {
         setVat7Sum(0)
         setTotalPaidAmount(0)
         setTotalRefundAmount(0)
+        setTotalShopifyFees(0)
         setPaidInvoicesCount(0)
         setOpenInvoicesCount(0)
         setOverdueInvoicesCount(0)
@@ -2073,6 +2076,26 @@ function InvoicesPageContent() {
               </div>
               <p className="text-[10px] text-gray-400 mt-1">
                 nur abgeschlossene Zahlungen
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Shopify Gebühren Card */}
+          <Card className={`bg-orange-50 border-orange-100 ${totalShopifyFees === 0 ? 'opacity-50' : ''}`}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-orange-700">
+                Shopify Gebühren
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                className="text-xl font-bold text-orange-700"
+                title={safeFormatCurrency(totalShopifyFees)}
+              >
+                {safeFormatCurrency(totalShopifyFees)}
+              </div>
+              <p className="text-[10px] text-gray-400 mt-1">
+                Zahlungsgebühren (2.9% + €0,30)
               </p>
             </CardContent>
           </Card>
