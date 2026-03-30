@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency PDF Download</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px; 
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .emergency-box {
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .big-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            margin: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        .big-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.4);
+        }
+        .invoice-list {
+            margin: 30px 0;
+            text-align: left;
+        }
+        .invoice-item {
+            background: rgba(255,255,255,0.1);
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .download-btn {
+            background: #2ed573;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .download-btn:hover { background: #26d063; }
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="emergency-box">
+        <h1>ALERT EMERGENCY PDF DOWNLOAD</h1>
+        <p>Direkter PDF Download für alle Rechnungen</p>
+        
+        <button class="big-btn" onclick="loadAllInvoices()">
+            PDF ALLE RECHNUNGEN LADEN
+        </button>
+        
+        <div id="invoices" class="invoice-list"></div>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const knownInvoices = [
+            { id: 'inv-1760129064902-7w5jonn44', number: 'SH-3325' },
+            { id: 'inv-1760128245502-aqq4trk4p', number: 'SH-3322' },
+            { id: 'inv-1760128213073-wbm17xu4n', number: 'SH-3323' },
+            { id: 'inv-1760127586386-4feymvqzm', number: 'SH-3324' }
+        ];
+
+        function updateStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.innerHTML = message;
+            status.style.color = isError ? '#ff4757' : '#2ed573';
+        }
+
+        async function downloadPDFDirect(invoiceId, invoiceNumber) {
+            updateStatus(`⏳ Lade PDF für ${invoiceNumber}...`);
+            
+            try {
+                const response = await fetch(`/api/invoices/${invoiceId}/download-pdf`, {
+                    method: 'GET',
+                    headers: {
+                        'x-user-info': JSON.stringify({
+                            id: 'admin-123',
+                            email: 'mgrdegh@web.de',
+                            firstName: 'Admin',
+                            lastName: 'User'
+                        }),
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    
+                    if (blob.size > 100) {
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${invoiceNumber}.pdf`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+                        
+                        updateStatus(`SUCCESS ${invoiceNumber} erfolgreich heruntergeladen! (${blob.size} bytes)`);
+                        return true;
+                    } else {
+                        throw new Error(`PDF zu klein: ${blob.size} bytes`);
+                    }
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+            } catch (error) {
+                updateStatus(`❌ Fehler bei ${invoiceNumber}: ${error.message}`, true);
+                
+                // Fallback: Direct link
+                const directUrl = `/api/invoices/${invoiceId}/download-pdf`;
+                window.open(directUrl, '_blank');
+                updateStatus(`RETRY ${invoiceNumber} wird in neuem Tab geöffnet...`);
+                
+                return false;
+            }
+        }
+
+        async function loadAllInvoices() {
+            const container = document.getElementById('invoices');
+            container.innerHTML = '';
+            
+            updateStatus('LIST Lade bekannte Rechnungen...');
+            
+            // Display known invoices
+            knownInvoices.forEach(invoice => {
+                const div = document.createElement('div');
+                div.className = 'invoice-item';
+                div.innerHTML = `
+                    <div>
+                        <strong>${invoice.number}</strong>
+                        <br><small>${invoice.id}</small>
+                    </div>
+                    <button class="download-btn" onclick="downloadPDFDirect('${invoice.id}', '${invoice.number}')">
+                        PDF DOWNLOAD
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+
+            // Try to load from API
+            try {
+                const response = await fetch('/api/invoices', {
+                    headers: {
+                        'x-user-info': JSON.stringify({
+                            id: 'admin-123',
+                            email: 'mgrdegh@web.de',
+                            firstName: 'Admin',
+                            lastName: 'User'
+                        })
+                    }
+                });
+                
+                if (response.ok) {
+                    const apiInvoices = await response.json();
+                    
+                    // Add any additional invoices from API
+                    apiInvoices.forEach(invoice => {
+                        if (!knownInvoices.find(k => k.id === invoice.id)) {
+                            const div = document.createElement('div');
+                            div.className = 'invoice-item';
+                            div.innerHTML = `
+                                <div>
+                                    <strong>${invoice.number}</strong> - ${invoice.customerName}
+                                    <br><small>${invoice.id}</small>
+                                </div>
+                                <button class="download-btn" onclick="downloadPDFDirect('${invoice.id}', '${invoice.number}')">
+                                    PDF DOWNLOAD
+                                </button>
+                            `;
+                            container.appendChild(div);
+                        }
+                    });
+                    
+                    updateStatus(`SUCCESS ${apiInvoices.length} Rechnungen geladen`);
+                } else {
+                    updateStatus('⚠️ API nicht verfügbar, zeige bekannte Rechnungen');
+                }
+            } catch (error) {
+                updateStatus('⚠️ API Fehler, zeige bekannte Rechnungen');
+            }
+        }
+
+        async function downloadAllPDFs() {
+            updateStatus('START Lade alle PDFs herunter...');
+            
+            for (const invoice of knownInvoices) {
+                await downloadPDFDirect(invoice.id, invoice.number);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+            }
+            
+            updateStatus('SUCCESS Alle Downloads abgeschlossen!');
+        }
+
+        // Auto-load on page load
+        window.addEventListener('load', () => {
+            setTimeout(loadAllInvoices, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,608 @@
+/* Custom animations for the landing page */
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+  }
+}
+
+/* Animation delay classes */
+.animation-delay-1s {
+  animation-delay: 1s;
+}
+
+.animation-delay-2s {
+  animation-delay: 2s;
+}
+
+.animation-delay-3s {
+  animation-delay: 3s;
+}
+
+.animation-delay-4s {
+  animation-delay: 4s;
+}
+
+.animation-delay-5s {
+  animation-delay: 5s;
+}
+
+/* Floating animation */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Slide in animation */
+.animate-slide-in {
+  animation: slideIn 0.8s ease-out forwards;
+}
+
+/* Shimmer effect */
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Glow effect */
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Hover effects */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* Gradient text animation */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-text {
+  background: linear-gradient(-45deg, #3b82f6, #8b5cf6, #f59e0b, #ef4444);
+  background-size: 400% 400%;
+  animation: gradient-shift 4s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Rotating border */
+@keyframes rotate-border {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-rotate-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: conic-gradient(from 0deg, #3b82f6, #8b5cf6, #f59e0b, #ef4444, #3b82f6);
+  border-radius: inherit;
+  animation: rotate-border 3s linear infinite;
+  z-index: -1;
+}
+
+/* Breathing effect */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* Typewriter effect */
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.animate-typewriter {
+  overflow: hidden;
+  border-right: 2px solid #3b82f6;
+  white-space: nowrap;
+  animation: typewriter 3s steps(40, end), blink-caret 0.75s step-end infinite;
+}
+
+@keyframes blink-caret {
+  from, to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: #3b82f6;
+  }
+}
+
+/* Optimized Interactive Visual Orbs */
+@keyframes orbFloat {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-10px) translateX(5px);
+  }
+}
+
+@keyframes orbPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+    transform: scale(1.1);
+  }
+}
+
+@keyframes orbRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Optimized Interactive Orbs */
+.interactive-orb {
+  position: absolute;
+  border-radius: 50%;
+  border-radius: 50%;
+  pointer-events: none;
+  cursor: default;
+  transition: all 0.3s ease;
+  animation: orbFloat 8s ease-in-out infinite;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  will-change: transform;
+}
+
+.interactive-orb:hover {
+  transform: scale(1.1) translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+  z-index: 10;
+}
+
+.interactive-orb:active {
+  transform: scale(0.9) translateY(2px) !important;
+  transition: all 0.1s ease;
+}
+
+.interactive-orb::before {
+  content: '';
+  position: absolute;
+  top: 15%;
+  left: 15%;
+  width: 25%;
+  height: 25%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+/* Optimized Gradient Orbs */
+.orb-1 {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  animation-delay: 0s;
+}
+
+.orb-2 {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  animation-delay: 1s;
+}
+
+.orb-3 {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  animation-delay: 2s;
+}
+
+.orb-4 {
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  animation-delay: 3s;
+}
+
+.orb-5 {
+  width: 26px;
+  height: 26px;
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  animation-delay: 4s;
+}
+
+.orb-6 {
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  animation-delay: 5s;
+}
+
+.orb-mini {
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);
+  animation-delay: 2s;
+}
+
+.orb-tiny {
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+  animation-delay: 1.5s;
+}
+
+/* Optimized Small Particles */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+}
+
+.particle-1 {
+  width: 3px;
+  height: 3px;
+  background: #667eea;
+  animation: orbFloat 6s ease-in-out infinite;
+}
+
+.particle-2 {
+  width: 4px;
+  height: 4px;
+  background: #f093fb;
+  animation: orbFloat 8s ease-in-out infinite;
+}
+
+.particle-3 {
+  width: 5px;
+  height: 5px;
+  background: #4facfe;
+  animation: orbFloat 7s ease-in-out infinite;
+}
+
+.particle-4 {
+  width: 6px;
+  height: 6px;
+  background: #43e97b;
+  animation: orbFloat 9s ease-in-out infinite;
+}
+
+
+
+/* Orb Trail Effect */
+@keyframes orbTrail {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+.orb-trail {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: orbTrail 1s ease-out forwards;
+}
+
+/* Constellation connection lines */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+.orb-connection {
+  animation: fadeInOut 3s ease-in-out;
+}
+
+
+/* Invoice-like animations */
+@keyframes paperFly {
+  0% {
+    transform: translateX(-100px) translateY(50px) rotate(-10deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100vw) translateY(-50px) rotate(10deg);
+    opacity: 0;
+  }
+}
+
+@keyframes moneyCounter {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes euroSign {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    color: #10b981;
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+    color: #059669;
+  }
+}
+
+@keyframes invoiceStamp {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(-45deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-45deg);
+    opacity: 1;
+  }
+}
+
+@keyframes receiptPrint {
+  0% {
+    height: 0;
+    opacity: 0;
+  }
+  100% {
+    height: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes calculatorKeys {
+  0%, 100% {
+    transform: scale(1);
+    background-color: #f3f4f6;
+  }
+  50% {
+    transform: scale(0.95);
+    background-color: #e5e7eb;
+  }
+}
+
+/* Invoice paper flying effect */
+.animate-paper-fly {
+  animation: paperFly 8s linear infinite;
+}
+
+/* Money counter effect */
+.animate-money-counter {
+  animation: moneyCounter 0.8s ease-out forwards;
+}
+
+/* Euro sign animation */
+.animate-euro-sign {
+  animation: euroSign 2s ease-in-out infinite;
+}
+
+/* Invoice stamp effect */
+.animate-invoice-stamp {
+  animation: invoiceStamp 1s ease-out forwards;
+}
+
+/* Receipt printing effect */
+.animate-receipt-print {
+  animation: receiptPrint 2s ease-out forwards;
+}
+
+/* Calculator keys effect */
+.animate-calculator-keys {
+  animation: calculatorKeys 1s ease-in-out infinite;
+}
+
+/* Flying invoice papers */
+.invoice-paper {
+  position: absolute;
+  width: 40px;
+  height: 50px;
+  background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  pointer-events: none;
+}
+
+.invoice-paper::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 6px;
+  right: 6px;
+  height: 2px;
+  background: #3b82f6;
+  border-radius: 1px;
+}
+
+.invoice-paper::after {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: 6px;
+  right: 6px;
+  height: 1px;
+  background: #94a3b8;
+  border-radius: 0.5px;
+  box-shadow: 0 5px 0 #94a3b8, 0 10px 0 #94a3b8;
+}
+
+/* Euro symbols floating */
+.euro-symbol {
+  position: absolute;
+  font-size: 24px;
+  font-weight: bold;
+  color: #10b981;
+  pointer-events: none;
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Calculator display effect */
+.calculator-display {
+  background: #1f2937;
+  color: #10b981;
+  font-family: 'Courier New', monospace;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 2px solid #374151;
+  position: relative;
+  overflow: hidden;
+}
+
+.calculator-display::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+/* Invoice status badges */
+.status-badge-paid {
+  background: linear-gradient(45deg, #10b981, #059669);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  animation: invoiceStamp 1s ease-out;
+}
+
+.status-badge-pending {
+  background: linear-gradient(45deg, #f59e0b, #d97706);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  animation: pulse 2s infinite;
+}
+
+.status-badge-overdue {
+  background: linear-gradient(45deg, #ef4444, #dc2626);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  animation: pulse 1s infinite;
+}
+
+/* Money rain effect */
+@keyframes moneyRain {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.money-rain {
+  position: absolute;
+  font-size: 20px;
+  color: #10b981;
+  animation: moneyRain 4s linear infinite;
+  pointer-events: none;
+}

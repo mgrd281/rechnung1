@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rechnungen Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #0f172a;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        /* View Switch */
+        .view-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+
+        .view-switch {
+            display: flex;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .view-switch button {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .view-switch button:hover {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .view-switch button:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: -2px;
+            z-index: 1;
+        }
+
+        .view-switch button.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .view-switch button.active:hover {
+            background: #2563eb;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 4px 0;
+            margin-bottom: 24px;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+
+        .toolbar::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .toolbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .toolbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .toolbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .chip {
+            flex-shrink: 0;
+            padding: 8px 16px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .chip:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #334155;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .chip:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+
+        .chip.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .chip.active:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        /* Invoices Container */
+        .invoices {
+            transition: all 0.3s ease;
+        }
+
+        /* List View */
+        .invoices.list-view {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .invoices.list-view .invoice-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .invoices.list-view .invoice-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .invoices.list-view .invoice-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .invoices.list-view .invoice-number {
+            font-weight: 600;
+            color: #0f172a;
+            min-width: 100px;
+        }
+
+        .invoices.list-view .invoice-customer {
+            color: #64748b;
+            flex: 1;
+        }
+
+        .invoices.list-view .invoice-date {
+            color: #64748b;
+            font-size: 14px;
+            min-width: 100px;
+        }
+
+        .invoices.list-view .invoice-amount {
+            font-weight: 600;
+            color: #059669;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        /* Grid View */
+        .invoices.grid-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 14px;
+        }
+
+        .invoices.grid-view .invoice-card {
+            padding: 20px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .invoices.grid-view .invoice-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .invoices.grid-view .invoice-card:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+
+        .invoices.grid-view .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .invoices.grid-view .invoice-number {
+            font-weight: 600;
+            color: #0f172a;
+            font-size: 16px;
+        }
+
+        .invoices.grid-view .invoice-status {
+            padding: 4px 8px;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .invoices.grid-view .invoice-customer {
+            color: #64748b;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .invoices.grid-view .invoice-date {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .invoices.grid-view .invoice-amount {
+            font-weight: 700;
+            color: #059669;
+            font-size: 18px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard {
+                padding: 16px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .view-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .invoices.list-view .invoice-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .invoices.list-view .invoice-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+                width: 100%;
+            }
+
+            .invoices.list-view .invoice-number,
+            .invoices.list-view .invoice-date,
+            .invoices.list-view .invoice-amount {
+                min-width: auto;
+            }
+
+            .invoices.list-view .invoice-amount {
+                text-align: left;
+            }
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: #475569;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>Rechnungen Dashboard</h1>
+            <p>Verwalten Sie Ihre Rechnungen und Zahlungen</p>
+        </div>
+
+        <div class="view-controls">
+            <!-- Time Period Toolbar -->
+            <div class="toolbar" role="tablist" aria-label="Zeitraum auswählen">
+                <button class="chip active" data-period="heute" role="tab" aria-selected="true">
+                    Heute
+                </button>
+                <button class="chip" data-period="woche" role="tab" aria-selected="false">
+                    Diese Woche
+                </button>
+                <button class="chip" data-period="monat" role="tab" aria-selected="false">
+                    Dieser Monat
+                </button>
+                <button class="chip" data-period="3monate" role="tab" aria-selected="false">
+                    Letzte 3 Monate
+                </button>
+                <button class="chip" data-period="jahr" role="tab" aria-selected="false">
+                    Dieses Jahr
+                </button>
+            </div>
+
+            <!-- View Switch -->
+            <div class="view-switch" role="tablist" aria-label="Ansicht wechseln">
+                <button class="view-btn" data-view="grid" role="tab" aria-selected="true">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 3h7v7H3V3zm0 11h7v7H3v-7zm11-11h7v7h-7V3zm0 11h7v7h-7v-7z"/>
+                    </svg>
+                    Raster
+                </button>
+                <button class="view-btn active" data-view="list" role="tab" aria-selected="false">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                    </svg>
+                    Liste
+                </button>
+            </div>
+        </div>
+
+        <!-- Invoices Container -->
+        <div class="invoices list-view" id="invoicesContainer">
+            <!-- Sample Invoice Cards -->
+            <div class="invoice-card" tabindex="0">
+                <div class="invoice-info">
+                    <div class="invoice-number">RG-2024-001</div>
+                    <div class="invoice-customer">Digitalkunde #3307</div>
+                    <div class="invoice-date">04.10.2024</div>
+                </div>
+                <div class="invoice-amount">€4.90</div>
+                <div class="invoice-header">
+                    <div class="invoice-number">RG-2024-001</div>
+                    <div class="invoice-status">Bezahlt</div>
+                </div>
+            </div>
+
+            <div class="invoice-card" tabindex="0">
+                <div class="invoice-info">
+                    <div class="invoice-number">RG-2024-002</div>
+                    <div class="invoice-customer">Online-Kunde #3306</div>
+                    <div class="invoice-date">03.10.2024</div>
+                </div>
+                <div class="invoice-amount">€29.99</div>
+                <div class="invoice-header">
+                    <div class="invoice-number">RG-2024-002</div>
+                    <div class="invoice-status">Bezahlt</div>
+                </div>
+            </div>
+
+            <div class="invoice-card" tabindex="0">
+                <div class="invoice-info">
+                    <div class="invoice-number">RG-2024-003</div>
+                    <div class="invoice-customer">E-Commerce Kunde #3305</div>
+                    <div class="invoice-date">02.10.2024</div>
+                </div>
+                <div class="invoice-amount">€15.50</div>
+                <div class="invoice-header">
+                    <div class="invoice-number">RG-2024-003</div>
+                    <div class="invoice-status">Bezahlt</div>
+                </div>
+            </div>
+
+            <div class="invoice-card" tabindex="0">
+                <div class="invoice-info">
+                    <div class="invoice-number">RG-2024-004</div>
+                    <div class="invoice-customer">Web-Kunde #3304</div>
+                    <div class="invoice-date">01.10.2024</div>
+                </div>
+                <div class="invoice-amount">€89.00</div>
+                <div class="invoice-header">
+                    <div class="invoice-number">RG-2024-004</div>
+                    <div class="invoice-status">Bezahlt</div>
+                </div>
+            </div>
+
+            <div class="invoice-card" tabindex="0">
+                <div class="invoice-info">
+                    <div class="invoice-number">RG-2024-005</div>
+                    <div class="invoice-customer">Karinex Kunde #3303</div>
+                    <div class="invoice-date">30.09.2024</div>
+                </div>
+                <div class="invoice-amount">€12.75</div>
+                <div class="invoice-header">
+                    <div class="invoice-number">RG-2024-005</div>
+                    <div class="invoice-status">Bezahlt</div>
+                </div>
+            </div>
+
+            <div class="invoice-card" tabindex="0">
+                <div class="invoice-info">
+                    <div class="invoice-number">RG-2024-006</div>
+                    <div class="invoice-customer">Digital Store Kunde #3302</div>
+                    <div class="invoice-date">29.09.2024</div>
+                </div>
+                <div class="invoice-amount">€45.20</div>
+                <div class="invoice-header">
+                    <div class="invoice-number">RG-2024-006</div>
+                    <div class="invoice-status">Bezahlt</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard functionality
+        class InvoiceDashboard {
+            constructor() {
+                this.currentView = 'list';
+                this.currentPeriod = 'heute';
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.updateView();
+            }
+
+            bindEvents() {
+                // Time period chips
+                const chips = document.querySelectorAll('.chip');
+                chips.forEach(chip => {
+                    chip.addEventListener('click', (e) => {
+                        this.handlePeriodChange(e.target);
+                    });
+
+                    chip.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            this.handlePeriodChange(e.target);
+                        }
+                    });
+                });
+
+                // View switch buttons
+                const viewButtons = document.querySelectorAll('.view-btn');
+                viewButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        this.handleViewChange(e.target);
+                    });
+
+                    button.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            this.handleViewChange(e.target);
+                        }
+                    });
+                });
+
+                // Keyboard navigation for toolbar
+                document.addEventListener('keydown', (e) => {
+                    if (e.target.classList.contains('chip')) {
+                        this.handleChipNavigation(e);
+                    }
+                });
+            }
+
+            handlePeriodChange(clickedChip) {
+                // Remove active class from all chips
+                document.querySelectorAll('.chip').forEach(chip => {
+                    chip.classList.remove('active');
+                    chip.setAttribute('aria-selected', 'false');
+                });
+
+                // Add active class to clicked chip
+                clickedChip.classList.add('active');
+                clickedChip.setAttribute('aria-selected', 'true');
+
+                // Update current period
+                this.currentPeriod = clickedChip.dataset.period;
+
+                // Filter invoices (placeholder for actual filtering logic)
+                this.filterInvoices(this.currentPeriod);
+
+                console.log(`Zeitraum geändert zu: ${this.currentPeriod}`);
+            }
+
+            handleViewChange(clickedButton) {
+                // Remove active class from all view buttons
+                document.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.setAttribute('aria-selected', 'false');
+                });
+
+                // Add active class to clicked button
+                clickedButton.classList.add('active');
+                clickedButton.setAttribute('aria-selected', 'true');
+
+                // Update current view
+                this.currentView = clickedButton.dataset.view;
+
+                // Update view
+                this.updateView();
+
+                console.log(`Ansicht geändert zu: ${this.currentView}`);
+            }
+
+            updateView() {
+                const container = document.getElementById('invoicesContainer');
+                
+                // Remove existing view classes
+                container.classList.remove('list-view', 'grid-view');
+                
+                // Add new view class
+                container.classList.add(`${this.currentView}-view`);
+
+                // Update accessibility
+                container.setAttribute('aria-label', 
+                    this.currentView === 'grid' ? 'Rechnungen in Rasteransicht' : 'Rechnungen in Listenansicht'
+                );
+            }
+
+            handleChipNavigation(e) {
+                const chips = Array.from(document.querySelectorAll('.chip'));
+                const currentIndex = chips.indexOf(e.target);
+
+                let newIndex;
+                switch(e.key) {
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        newIndex = currentIndex > 0 ? currentIndex - 1 : chips.length - 1;
+                        chips[newIndex].focus();
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        newIndex = currentIndex < chips.length - 1 ? currentIndex + 1 : 0;
+                        chips[newIndex].focus();
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        chips[0].focus();
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        chips[chips.length - 1].focus();
+                        break;
+                }
+            }
+
+            filterInvoices(period) {
+                // Placeholder for actual filtering logic
+                // In a real application, this would filter the invoices based on the selected period
+                const invoices = document.querySelectorAll('.invoice-card');
+                
+                // Example: Show loading state
+                const container = document.getElementById('invoicesContainer');
+                container.style.opacity = '0.6';
+                
+                // Simulate API call
+                setTimeout(() => {
+                    container.style.opacity = '1';
+                    console.log(`Gefilterte Rechnungen für Zeitraum: ${period}`);
+                }, 300);
+            }
+
+            // Method to add new invoice (for future use)
+            addInvoice(invoiceData) {
+                const container = document.getElementById('invoicesContainer');
+                const invoiceCard = this.createInvoiceCard(invoiceData);
+                container.appendChild(invoiceCard);
+            }
+
+            createInvoiceCard(data) {
+                const card = document.createElement('div');
+                card.className = 'invoice-card';
+                card.tabIndex = 0;
+                
+                card.innerHTML = `
+                    <div class="invoice-info">
+                        <div class="invoice-number">${data.number}</div>
+                        <div class="invoice-customer">${data.customer}</div>
+                        <div class="invoice-date">${data.date}</div>
+                    </div>
+                    <div class="invoice-amount">${data.amount}</div>
+                    <div class="invoice-header">
+                        <div class="invoice-number">${data.number}</div>
+                        <div class="invoice-status">${data.status}</div>
+                    </div>
+                `;
+                
+                return card;
+            }
+        }
+
+        // Initialize dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.invoiceDashboard = new InvoiceDashboard();
+        });
+
+        // Example of how to add a new invoice programmatically
+        // window.invoiceDashboard.addInvoice({
+        //     number: 'RG-2024-007',
+        //     customer: 'Neuer Kunde #3301',
+        //     date: '05.10.2024',
+        //     amount: '€99.99',
+        //     status: 'Offen'
+        // });
+    </script>
+</body>
+</html>

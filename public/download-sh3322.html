@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Download PDF SH-3322</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            text-align: center; 
+            padding: 100px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .btn { 
+            background: #28a745; 
+            color: white; 
+            padding: 20px 40px; 
+            border: none; 
+            border-radius: 10px; 
+            font-size: 20px; 
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        .btn:hover { 
+            background: #218838; 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        #status { margin-top: 30px; font-size: 18px; }
+        .success { color: #90EE90; }
+        .error { color: #FFB6C1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDF Rechnung SH-3322</h1>
+        <p>Direkter PDF Download</p>
+        
+        <button class="btn" onclick="downloadNow()">
+            START PDF HERUNTERLADEN
+        </button>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        function updateStatus(msg, isError = false) {
+            document.getElementById('status').innerHTML = 
+                `<div class="${isError ? 'error' : 'success'}">${msg}</div>`;
+        }
+
+        async function downloadNow() {
+            updateStatus('⏳ Generiere PDF...');
+            
+            try {
+                const response = await fetch('/api/invoices/inv-1760128245502-aqq4trk4p/download-pdf', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-user-info': JSON.stringify({
+                            id: 'admin-123',
+                            email: 'mgrdegh@web.de',
+                            firstName: 'Admin',
+                            lastName: 'User'
+                        })
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    console.log('Blob size:', blob.size);
+                    
+                    if (blob.size > 0) {
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = 'Rechnung-SH-3322.pdf';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+                        
+                        updateStatus(`PDF successfully downloaded! (${blob.size} bytes)`);
+                    } else {
+                        updateStatus('❌ PDF ist leer', true);
+                    }
+                } else {
+                    const errorText = await response.text();
+                    updateStatus(`❌ Server Fehler: ${response.status} - ${errorText}`, true);
+                }
+            } catch (error) {
+                console.error('Download error:', error);
+                updateStatus(`❌ Netzwerk Fehler: ${error.message}`, true);
+            }
+        }
+        
+        // Auto-download nach 3 Sekunden
+        setTimeout(() => {
+            updateStatus('AUTO Automatischer Download in 3 Sekunden...');
+            setTimeout(downloadNow, 3000);
+        }, 1000);
+    </script>
+</body>
+</html>

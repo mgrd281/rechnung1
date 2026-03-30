@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shopify Frontend Debug Test</title>
+</head>
+<body>
+    <h1>Shopify Frontend Debug Test</h1>
+    <div id="result"></div>
+    
+    <script>
+        async function testFrontend() {
+            console.log('🧪 Testing Frontend API Call...')
+            
+            try {
+                const response = await fetch('/api/shopify/import?limit=1000000&financial_status=any')
+                const data = await response.json()
+                
+                console.log('📊 API Response:', data)
+                
+                const result = document.getElementById('result')
+                result.innerHTML = `
+                    <h2>API Response:</h2>
+                    <p><strong>Total Count:</strong> ${data.totalCount}</p>
+                    <p><strong>Fetched Count:</strong> ${data.fetchedCount}</p>
+                    <p><strong>Orders Length:</strong> ${data.orders?.length}</p>
+                    <p><strong>Success:</strong> ${data.success}</p>
+                    
+                    <h2>Expected UI Display:</h2>
+                    <p style="color: green; font-weight: bold;">${data.totalCount || data.orders?.length} Bestellungen verfügbar</p>
+                    
+                    <h2>Current Problem:</h2>
+                    <p style="color: red;">Frontend might still show: ${data.orders?.length} Bestellungen verfügbar</p>
+                `
+                
+            } catch (error) {
+                console.error('❌ Error:', error)
+                document.getElementById('result').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`
+            }
+        }
+        
+        // Run test when page loads
+        testFrontend()
+    </script>
+</body>
+</html>

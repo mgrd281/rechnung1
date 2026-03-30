@@ -1,0 +1,272 @@
+// ================================================
+// PHASE 2: AUTONOMOUS COMMERCE - DATABASE SCHEMA
+// ================================================
+// 
+// This schema is PREPARED but NOT ACTIVE.
+// Uncomment when implementing Phase 2 features.
+//
+// Features:
+// - Auto Repricing
+// - Dynamic Discounting
+// - Supplier Scoring
+// - Private Label Detection
+//
+// ================================================
+
+/*
+
+// ================================================
+// AUTO REPRICING
+// ================================================
+
+model RepricingRule {
+  id                String   @id @default(uuid())
+  organizationId    String
+  productId         String?  // null = global rule
+  category          String?  // null = all categories
+  
+  enabled           Boolean  @default(true)
+  strategy          String   // competitive_match, undercut, premium, dynamic
+  
+  // Constraints
+  minPrice          Float
+  maxPrice          Float
+  minimumMarginPercent Float  @default(25)
+  maxDailyChangePercent Float @default(10) // max % change per day
+  
+  // Strategy-specific parameters
+  undercutPercent   Float?   // for undercut strategy
+  premiumPercent    Float?   // for premium strategy
+  
+  organization      Organization @relation(fields: [organizationId], references: [id])
+  logs              RepricingLog[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([organizationId])
+  @@index([enabled])
+}
+
+model RepricingLog {
+  id                String   @id @default(uuid())
+  ruleId            String
+  productCandidateId String
+  
+  oldPrice          Float
+  newPrice          Float
+  reason            String   // "competitor_drop", "demand_increase", etc.
+  competitorPrices  Json     // Snapshot of competitor prices at time of change
+  
+  shopifyUpdated    Boolean  @default(false)
+  shopifyError      String?
+  
+  rule              RepricingRule @relation(fields: [ruleId], references: [id])
+  createdAt         DateTime @default(now())
+  
+  @@index([ruleId])
+  @@index([productCandidateId])
+  @@index([createdAt])
+}
+
+// ================================================
+// DYNAMIC DISCOUNTING
+// ================================================
+
+model DiscountRule {
+  id                String   @id @default(uuid())
+  organizationId    String
+  
+  name              String
+  description       String?
+  enabled           Boolean  @default(true)
+  priority          Int      @default(0) // Higher = applied first
+  
+  // Trigger conditions
+  triggerType       String   // stale_inventory, low_demand, high_stock, event, competitor
+  
+  // Stale inventory trigger
+  inactivityDays    Int?
+  
+  // Low demand trigger
+  demandThreshold   Int?     // Demand score threshold
+  
+  // High stock trigger
+  stockThreshold    Int?
+  
+  // Event trigger
+  eventName         String?  // black_friday, christmas, easter, summer_sale
+  daysBefore        Int?
+  daysAfter         Int?
+  
+  // Discount configuration
+  discountType      String   // percentage, fixed_amount
+  discountValue     Float
+  maxDiscountPercent Float   @default(50) // Safety cap
+  
+  // Time configuration
+  startDate         DateTime?
+  endDate           DateTime?
+  autoRemove        Boolean  @default(true)
+  
+  organization      Organization @relation(fields: [organizationId], references: [id])
+  applications      DiscountApplication[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([organizationId])
+  @@index([enabled])
+  @@index([triggerType])
+}
+
+model DiscountApplication {
+  id                String   @id @default(uuid())
+  ruleId            String
+  productCandidateId String
+  
+  originalPrice     Float
+  discountedPrice   Float
+  discountPercent   Float
+  discountAmount    Float
+  
+  appliedAt         DateTime @default(now())
+  removedAt         DateTime?
+  removalReason     String?  // sold, rule_disabled, time_expired
+  
+  shopifyUpdated    Boolean  @default(false)
+  shopifyDiscountId String?
+  
+  rule              DiscountRule @relation(fields: [ruleId], references: [id])
+  
+  @@index([ruleId])
+  @@index([productCandidateId])
+  @@index([appliedAt])
+}
+
+// ================================================
+// SUPPLIER SCORING
+// ================================================
+
+model SupplierScore {
+  id                String   @id @default(uuid())
+  supplierId        String   @unique
+  organizationId    String
+  
+  // Overall score
+  totalScore        Int      // 0-100
+  rating            String   // excellent (80-100), good (60-79), medium (40-59), poor (0-39)
+  trend             String   // improving, stable, declining
+  
+  // Individual metric scores (0-100 each)
+  deliveryScore     Int      @default(50)
+  priceStabilityScore Int    @default(50)
+  qualityScore      Int      @default(50)
+  issueScore        Int      @default(50)
+  communicationScore Int     @default(50)
+  refundScore       Int      @default(50)
+  
+  // Raw statistics for calculation
+  totalOrders       Int      @default(0)
+  avgDeliveryDays   Float?
+  priceVariancePercent Float?
+  returnRatePercent Float?
+  issuesCount       Int      @default(0)
+  avgResponseHours  Float?
+  refundRatePercent Float?
+  
+  lastCalculated    DateTime @default(now())
+  nextCalculation   DateTime?
+  
+  organization      Organization @relation(fields: [organizationId], references: [id])
+  supplier          Supplier @relation(fields: [supplierId], references: [id])
+  history           SupplierScoreHistory[]
+  
+  @@index([organizationId])
+  @@index([supplierId])
+  @@index([totalScore])
+  @@index([rating])
+}
+
+model SupplierScoreHistory {
+  id                String   @id @default(uuid())
+  supplierScoreId   String
+  
+  totalScore        Int
+  deliveryScore     Int
+  priceStabilityScore Int
+  qualityScore      Int
+  issueScore        Int
+  communicationScore Int
+  refundScore       Int
+  
+  calculatedAt      DateTime @default(now())
+  
+  score             SupplierScore @relation(fields: [supplierScoreId], references: [id], onDelete: Cascade)
+  
+  @@index([supplierScoreId])
+  @@index([calculatedAt])
+}
+
+// ================================================
+// PRIVATE LABEL DETECTION
+// ================================================
+
+model PrivateLabelOpportunity {
+  id                String   @id @default(uuid())
+  productCandidateId String   @unique
+  organizationId    String
+  
+  // Opportunity score
+  score             Int      // 0-100
+  opportunity       String   // excellent (70-100), good (50-69), poor (0-49)
+  
+  // Current product state
+  currentBrand      String?
+  currentBrandScore Int?     // Brand strength 0-100
+  currentMargin     Float
+  currentDemand     String
+  competitorCount   Int
+  
+  // Detection signals (boolean flags)
+  weakBrand         Boolean  @default(false)
+  lowCompetition    Boolean  @default(false)
+  stableDemand      Boolean  @default(false)
+  goodMargin        Boolean  @default(false)
+  genericProduct    Boolean  @default(false)
+  
+  // Private label estimates
+  estimatedMarginIncrease Float
+  estimatedNewMargin Float
+  estimatedCostPerUnit Float?
+  minOrderQuantity  Int?
+  
+  // Analysis reasoning
+  reasoning         Json     // Array of strings explaining why this is an opportunity
+  
+  // Workflow status
+  status            String   @default("detected") // detected, evaluating, sourcing, negotiating, production, launched, rejected
+  assignedTo        String?  // User ID
+  notes             String?
+  
+  // ROI calculation
+  initialInvestment Float?
+  projectedRevenue  Float?
+  breakEvenUnits    Int?
+  
+  organization      Organization @relation(fields: [organizationId], references: [id])
+  detectedAt        DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([organizationId])
+  @@index([opportunity])
+  @@index([status])
+  @@index([score])
+}
+
+*/
+
+// ================================================
+// END OF PHASE 2 SCHEMA
+// ================================================
+// To activate: Remove comment blocks above and add relations to Organization model

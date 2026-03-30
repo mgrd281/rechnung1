@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopify Bestellungen - Enhanced Grid View</title>
+    <style>
+        /* Base Shopify-like styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f6f6f7;
+            color: #202223;
+            line-height: 1.6;
+        }
+
+        .page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #202223;
+        }
+
+        .page-subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+            margin-bottom: 20px;
+        }
+
+        .filters-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+            background: white;
+            color: #202223;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #f6f6f7;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 0 4px;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .actions-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-count {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        /* Time period chips */
+        .time-chips {
+            display: flex;
+            gap: 8px;
+            margin: 16px 0;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding: 4px 0;
+        }
+
+        .time-chip {
+            flex-shrink: 0;
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 16px;
+            font-size: 13px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .time-chip:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .time-chip.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        /* Table styles */
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 500;
+            color: #374151;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        .invoice-number {
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .amount {
+            font-weight: 600;
+            color: #059669;
+        }
+
+        /* Grid View Enhancement Styles */
+        .view-toggle {
+            display: flex;
+            background: #ffffff;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .view-toggle button {
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .view-toggle button:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .view-toggle button.active {
+            background: #2563eb;
+            color: white;
+        }
+
+        .invoices-grid-container {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .invoice-grid-card {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .invoice-grid-card:hover {
+            border-color: #2563eb;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .invoice-grid-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .invoice-grid-number {
+            font-weight: 600;
+            color: #2563eb;
+            font-size: 16px;
+        }
+
+        .invoice-grid-status {
+            padding: 4px 8px;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .invoice-grid-customer {
+            color: #6b7280;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .invoice-grid-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .invoice-grid-date {
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        .invoice-grid-amount {
+            font-weight: 700;
+            color: #059669;
+            font-size: 18px;
+        }
+
+        .invoice-grid-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .invoice-grid-btn {
+            padding: 6px 12px;
+            border: 1px solid #e1e5e9;
+            background: white;
+            color: #6b7280;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .invoice-grid-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        /* View mode classes */
+        .grid-mode .invoice-table-container {
+            display: none;
+        }
+
+        .grid-mode .invoices-grid-container {
+            display: grid;
+        }
+
+        .list-mode .invoices-grid-container {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .filters-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .actions-bar {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .invoices-grid-container {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body class="list-mode">
+    <div class="page-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">📋 Shopify Bestellungen (Legacy)</h1>
+                <p class="page-subtitle">Vorschau der verfügbaren Bestellungen (bis zu 100.000 Bestellungen)</p>
+            </div>
+            <button class="btn btn-primary">🔄 Aktualisieren</button>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label class="filter-label">Von Datum</label>
+                    <input type="date" class="filter-input" value="2024-10-05">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Bis Datum</label>
+                    <input type="date" class="filter-input" value="2025-10-05">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Zahlungsstatus</label>
+                    <select class="filter-input">
+                        <option>Alle Status</option>
+                        <option>Bezahlt</option>
+                        <option>Offen</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary">🔍 Laden</button>
+            </div>
+        </div>
+
+        <!-- Actions Bar -->
+        <div class="actions-bar">
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Suche nach Bestellnummer, Kunde oder E-Mail...">
+            </div>
+            <div class="actions-right">
+                <span class="status-count">2 Bestellungen verfügbar</span>
+                <button class="btn">Alle auswählen</button>
+                <button class="btn">Auswahl löschen</button>
+                <button class="btn" style="background: #10b981; color: white;">📄 0 zu Rechnungen</button>
+                
+                <!-- View Toggle -->
+                <div class="view-toggle">
+                    <button class="view-list active" data-view="list">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                        </svg>
+                        Liste
+                    </button>
+                    <button class="view-grid" data-view="grid">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 3h7v7H3V3zm0 11h7v7H3v-7zm11-11h7v7h-7V3zm0 11h7v7h-7v-7z"/>
+                        </svg>
+                        Raster
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Period Chips -->
+        <div class="time-chips">
+            <button class="time-chip active">Heute</button>
+            <button class="time-chip">Diese Woche</button>
+            <button class="time-chip">Dieser Monat</button>
+            <button class="time-chip">Letzte 3 Monate</button>
+            <button class="time-chip">Dieses Jahr</button>
+        </div>
+
+        <!-- Table View -->
+        <div class="invoice-table-container">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bestellung</th>
+                            <th>Kunde</th>
+                            <th>E-Mail</th>
+                            <th>Adresse</th>
+                            <th>Erstellt</th>
+                            <th>Betrag</th>
+                            <th>Status</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input type="checkbox">
+                                <span class="invoice-number">#3308</span>
+                            </td>
+                            <td>Digitalkunde #3308</td>
+                            <td>kunde3308@karinex.com</td>
+                            <td>Online-Handel Karinex, Kunde #3308, Hamburg</td>
+                            <td>5.10.2025</td>
+                            <td class="amount">4.90 EUR</td>
+                            <td><span class="status-badge">Bezahlt</span></td>
+                            <td>
+                                <button class="btn">📥</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox">
+                                <span class="invoice-number">#3307</span>
+                            </td>
+                            <td>Online-Kunde #3307</td>
+                            <td>order3307@karinex.com</td>
+                            <td>E-Commerce Zentrum, Order #3307, München</td>
+                            <td>4.10.2025</td>
+                            <td class="amount">4.90 EUR</td>
+                            <td><span class="status-badge">Bezahlt</span></td>
+                            <td>
+                                <button class="btn">📥</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox">
+                                <span class="invoice-number">#3306</span>
+                            </td>
+                            <td>E-Commerce Kunde #3306</td>
+                            <td>digital3306@karinex.com</td>
+                            <td>Digitaler Vertrieb Karinex, Nr. #3306, Köln</td>
+                            <td>3.10.2025</td>
+                            <td class="amount">29.99 EUR</td>
+                            <td><span class="status-badge">Bezahlt</span></td>
+                            <td>
+                                <button class="btn">📥</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox">
+                                <span class="invoice-number">#3305</span>
+                            </td>
+                            <td>Web-Kunde #3305</td>
+                            <td>shop3305@karinex.com</td>
+                            <td>Web-Shop Karinex, Auftrag #3305, Frankfurt</td>
+                            <td>2.10.2025</td>
+                            <td class="amount">15.50 EUR</td>
+                            <td><span class="status-badge">Bezahlt</span></td>
+                            <td>
+                                <button class="btn">📥</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Grid View Container -->
+        <div class="invoices-grid-container" id="gridContainer">
+            <!-- Grid cards will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Enhanced Grid View Functionality
+        class ShopifyGridView {
+            constructor() {
+                this.currentView = 'list';
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.populateGridView();
+            }
+
+            bindEvents() {
+                // View toggle buttons
+                const toggleButtons = document.querySelectorAll('.view-toggle button');
+                toggleButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        this.handleViewToggle(e);
+                    });
+                });
+
+                // Time chips
+                const timeChips = document.querySelectorAll('.time-chip');
+                timeChips.forEach(chip => {
+                    chip.addEventListener('click', (e) => {
+                        this.handleTimeFilter(e);
+                    });
+                });
+            }
+
+            handleViewToggle(e) {
+                const view = e.currentTarget.dataset.view;
+                
+                // Update button states
+                document.querySelectorAll('.view-toggle button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                e.currentTarget.classList.add('active');
+                
+                // Update body class
+                document.body.classList.remove('list-mode', 'grid-mode');
+                document.body.classList.add(`${view}-mode`);
+                
+                this.currentView = view;
+                
+                if (view === 'grid') {
+                    this.populateGridView();
+                }
+            }
+
+            handleTimeFilter(e) {
+                // Update active chip
+                document.querySelectorAll('.time-chip').forEach(chip => {
+                    chip.classList.remove('active');
+                });
+                e.currentTarget.classList.add('active');
+                
+                // Filter logic would go here
+                console.log('Filter by:', e.currentTarget.textContent);
+            }
+
+            populateGridView() {
+                const gridContainer = document.getElementById('gridContainer');
+                const tableRows = document.querySelectorAll('tbody tr');
+                
+                // Clear existing grid
+                gridContainer.innerHTML = '';
+                
+                // Convert table rows to grid cards
+                tableRows.forEach(row => {
+                    const invoiceData = this.extractInvoiceData(row);
+                    if (invoiceData) {
+                        const gridCard = this.createGridCard(invoiceData);
+                        gridContainer.appendChild(gridCard);
+                    }
+                });
+            }
+
+            extractInvoiceData(row) {
+                const cells = row.querySelectorAll('td');
+                if (cells.length < 6) return null;
+
+                return {
+                    number: cells[0].querySelector('.invoice-number').textContent,
+                    customer: cells[1].textContent.trim(),
+                    email: cells[2].textContent.trim(),
+                    address: cells[3].textContent.trim(),
+                    date: cells[4].textContent.trim(),
+                    amount: cells[5].textContent.trim(),
+                    status: cells[6].querySelector('.status-badge').textContent,
+                    row: row
+                };
+            }
+
+            createGridCard(data) {
+                const card = document.createElement('div');
+                card.className = 'invoice-grid-card';
+                
+                card.innerHTML = `
+                    <div class="invoice-grid-header">
+                        <div class="invoice-grid-number">${data.number}</div>
+                        <div class="invoice-grid-status">${data.status}</div>
+                    </div>
+                    <div class="invoice-grid-customer">${data.customer}</div>
+                    <div class="invoice-grid-details">
+                        <div class="invoice-grid-date">${data.date}</div>
+                        <div class="invoice-grid-amount">${data.amount}</div>
+                    </div>
+                    <div style="font-size: 12px; color: #9ca3af; margin: 8px 0;">
+                        📧 ${data.email}<br>
+                        📍 ${data.address}
+                    </div>
+                    <div class="invoice-grid-actions">
+                        <button class="invoice-grid-btn">📄 Anzeigen</button>
+                        <button class="invoice-grid-btn">📥 Download</button>
+                        <button class="invoice-grid-btn">✉️ Senden</button>
+                    </div>
+                `;
+                
+                // Add click handler
+                card.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('invoice-grid-btn')) {
+                        const checkbox = data.row.querySelector('input[type="checkbox"]');
+                        if (checkbox) {
+                            checkbox.checked = !checkbox.checked;
+                            card.style.borderColor = checkbox.checked ? '#2563eb' : '#e1e5e9';
+                        }
+                    }
+                });
+                
+                return card;
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            window.shopifyGridView = new ShopifyGridView();
+        });
+    </script>
+</body>
+</html>

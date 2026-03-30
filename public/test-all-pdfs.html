@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Test - Alle Rechnungen</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .invoice-item { 
+            border: 1px solid #ddd; 
+            margin: 10px 0; 
+            padding: 15px; 
+            border-radius: 5px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .btn { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 0 5px; 
+        }
+        .btn:hover { background: #0056b3; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .status { 
+            margin-left: 10px; 
+            font-weight: bold; 
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .loading { color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 PDF Test - Alle Rechnungen</h1>
+        <p>Teste PDF Download für alle verfügbaren Rechnungen</p>
+        
+        <button class="btn" onclick="loadInvoices()">🔄 Rechnungen laden</button>
+        <button class="btn" onclick="testAllPDFs()">🚀 Alle PDFs testen</button>
+        
+        <div id="invoices"></div>
+        
+        <div id="summary" style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 5px; display: none;">
+            <h3>📊 Zusammenfassung</h3>
+            <div id="summaryContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let invoices = [];
+        let testResults = [];
+
+        async function loadInvoices() {
+            try {
+                const response = await fetch('/api/invoices', {
+                    headers: {
+                        'x-user-info': JSON.stringify({
+                            id: 'admin-123',
+                            email: 'mgrdegh@web.de',
+                            firstName: 'Admin',
+                            lastName: 'User'
+                        })
+                    }
+                });
+                
+                if (response.ok) {
+                    invoices = await response.json();
+                    displayInvoices();
+                } else {
+                    alert('Fehler beim Laden der Rechnungen: ' + response.status);
+                }
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            }
+        }
+
+        function displayInvoices() {
+            const container = document.getElementById('invoices');
+            container.innerHTML = '';
+            
+            if (invoices.length === 0) {
+                container.innerHTML = '<p>Keine Rechnungen gefunden.</p>';
+                return;
+            }
+            
+            invoices.forEach(invoice => {
+                const div = document.createElement('div');
+                div.className = 'invoice-item';
+                div.innerHTML = `
+                    <div>
+                        <strong>${invoice.number}</strong> - ${invoice.customerName} - €${invoice.total}
+                        <br><small>ID: ${invoice.id}</small>
+                    </div>
+                    <div>
+                        <button class="btn" onclick="testPDF('${invoice.id}', '${invoice.number}')">
+                            📄 PDF testen
+                        </button>
+                        <span class="status" id="status-${invoice.id}"></span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function testPDF(invoiceId, invoiceNumber) {
+            const statusElement = document.getElementById(`status-${invoiceId}`);
+            statusElement.className = 'status loading';
+            statusElement.textContent = '⏳ Teste...';
+            
+            try {
+                const response = await fetch(`/api/invoices/${invoiceId}/download-pdf`, {
+                    headers: {
+                        'x-user-info': JSON.stringify({
+                            id: 'admin-123',
+                            email: 'mgrdegh@web.de',
+                            firstName: 'Admin',
+                            lastName: 'User'
+                        })
+                    }
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    
+                    if (blob.size > 100) {
+                        // Download the PDF
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${invoiceNumber}.pdf`;
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        
+                        statusElement.className = 'status success';
+                        statusElement.textContent = `✅ OK (${blob.size} bytes)`;
+                        
+                        testResults.push({
+                            invoiceId,
+                            invoiceNumber,
+                            success: true,
+                            size: blob.size
+                        });
+                    } else {
+                        throw new Error(`PDF zu klein: ${blob.size} bytes`);
+                    }
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+            } catch (error) {
+                statusElement.className = 'status error';
+                statusElement.textContent = `❌ ${error.message}`;
+                
+                testResults.push({
+                    invoiceId,
+                    invoiceNumber,
+                    success: false,
+                    error: error.message
+                });
+            }
+        }
+
+        async function testAllPDFs() {
+            if (invoices.length === 0) {
+                alert('Bitte zuerst Rechnungen laden');
+                return;
+            }
+            
+            testResults = [];
+            
+            for (const invoice of invoices) {
+                await testPDF(invoice.id, invoice.number);
+                // Small delay between tests
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            showSummary();
+        }
+
+        function showSummary() {
+            const summaryDiv = document.getElementById('summary');
+            const contentDiv = document.getElementById('summaryContent');
+            
+            const successful = testResults.filter(r => r.success).length;
+            const failed = testResults.filter(r => !r.success).length;
+            
+            let html = `
+                <p><strong>Getestete Rechnungen:</strong> ${testResults.length}</p>
+                <p><strong>Erfolgreich:</strong> <span class="success">${successful}</span></p>
+                <p><strong>Fehlgeschlagen:</strong> <span class="error">${failed}</span></p>
+            `;
+            
+            if (failed > 0) {
+                html += '<h4>Fehlgeschlagene Rechnungen:</h4><ul>';
+                testResults.filter(r => !r.success).forEach(result => {
+                    html += `<li><strong>${result.invoiceNumber}</strong>: ${result.error}</li>`;
+                });
+                html += '</ul>';
+            }
+            
+            if (successful > 0) {
+                html += '<h4>Erfolgreiche Downloads:</h4><ul>';
+                testResults.filter(r => r.success).forEach(result => {
+                    html += `<li><strong>${result.invoiceNumber}</strong>: ${result.size} bytes</li>`;
+                });
+                html += '</ul>';
+            }
+            
+            contentDiv.innerHTML = html;
+            summaryDiv.style.display = 'block';
+        }
+
+        // Auto-load invoices on page load
+        window.addEventListener('load', loadInvoices);
+    </script>
+</body>
+</html>

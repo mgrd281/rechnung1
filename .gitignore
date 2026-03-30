@@ -1,0 +1,79 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# Typescript
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# User storage and uploads
+user-storage/
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+/logs
+*.log
+shopify-config.json
+google-cloud-credentials.json
+
+# Sensitive debug and data files
+debug_import_all_v2.txt
+COPY_PASTE_ENV.txt
+Pasted_content_01.txt
+*.pdf
+*.csv
+.env.development
+shopify-settings-temp.json
+rebuild_trigger.txt
+Pasted_content_01.txt
+*.json
+*.txt
+*.liquid
+!package.json
+!tsconfig.json
+!next-auth.d.ts
+!components.json
+!theme.liquid
+!temp_asset.liquid
+

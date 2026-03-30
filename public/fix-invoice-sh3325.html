@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix PDF - Rechnung SH-3325</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .fix-container {
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .invoice-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 5px solid #007bff;
+        }
+        .big-download-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            margin: 20px;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+            transition: all 0.3s ease;
+        }
+        .big-download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(40, 167, 69, 0.4);
+        }
+        .big-download-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .loading { background: #d1ecf1; color: #0c5460; }
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #28a745);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .alternative-links {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .link-btn {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+            font-weight: bold;
+        }
+        .link-btn:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="fix-container">
+        <h1>FIX PDF Fix für Rechnung SH-3325</h1>
+        
+        <div class="invoice-header">
+            <h3>PDF Rechnung SH-3325</h3>
+            <p><strong>Kunde:</strong> E-Commerce Kunde #3325</p>
+            <p><strong>Betrag:</strong> €34.80</p>
+            <p><strong>Datum:</strong> 10.10.2025</p>
+            <p><strong>ID:</strong> inv-1760129064902-7w5jonn44</p>
+        </div>
+        
+        <button class="big-download-btn" onclick="downloadPDF()" id="downloadBtn">
+            START PDF JETZT HERUNTERLADEN
+        </button>
+        
+        <div class="progress-container" id="progressContainer" style="display: none;">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div id="status"></div>
+        
+        <div class="alternative-links">
+            <h4>LINK Alternative Download-Links:</h4>
+            <a href="/api/invoices/inv-1760129064902-7w5jonn44/download-pdf" 
+               target="_blank" class="link-btn">
+               PDF Direkter API Link
+            </a>
+            <a href="javascript:void(0)" onclick="openInNewTab()" class="link-btn">
+               RETRY Neuer Tab
+            </a>
+            <a href="/emergency-pdf.html" class="link-btn">
+               ALERT Notfall-Seite
+            </a>
+        </div>
+        
+        <div style="margin-top: 30px; font-size: 14px; color: #666;">
+            <p><strong>Hinweise:</strong></p>
+            <ul style="text-align: left; max-width: 400px; margin: 0 auto;">
+                <li>Falls der Download nicht startet, versuchen Sie einen der alternativen Links</li>
+                <li>Deaktivieren Sie Popup-Blocker für diese Seite</li>
+                <li>Bei weiteren Problemen laden Sie die Seite neu (Ctrl+F5)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const invoiceId = 'inv-1760129064902-7w5jonn44';
+        const invoiceNumber = 'SH-3325';
+        
+        function updateStatus(message, type = 'loading') {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.innerHTML = message;
+        }
+        
+        function updateProgress(percent) {
+            const container = document.getElementById('progressContainer');
+            const bar = document.getElementById('progressBar');
+            
+            if (percent > 0) {
+                container.style.display = 'block';
+                bar.style.width = percent + '%';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+        
+        async function downloadPDF() {
+            const btn = document.getElementById('downloadBtn');
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Generiere PDF...';
+            
+            updateStatus('RETRY PDF wird generiert...', 'loading');
+            updateProgress(10);
+            
+            try {
+                updateProgress(30);
+                
+                const response = await fetch(`/api/invoices/${invoiceId}/download-pdf`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-user-info': JSON.stringify({
+                            id: 'admin-123',
+                            email: 'mgrdegh@web.de',
+                            firstName: 'Admin',
+                            lastName: 'User'
+                        }),
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                updateProgress(60);
+                console.log('Response status:', response.status);
+                
+                if (response.ok) {
+                    updateProgress(80);
+                    const blob = await response.blob();
+                    console.log('Blob size:', blob.size);
+                    
+                    if (blob.size > 100) {
+                        updateProgress(100);
+                        
+                        // Create download
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${invoiceNumber}.pdf`;
+                        a.style.display = 'none';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+                        
+                        updateStatus(`PDF successfully downloaded! (${blob.size} bytes)`, 'success');
+                        btn.innerHTML = '✅ Erfolgreich!';
+                        
+                        setTimeout(() => {
+                            btn.innerHTML = 'START PDF JETZT HERUNTERLADEN';
+                            btn.disabled = false;
+                            updateProgress(0);
+                        }, 3000);
+                        
+                    } else {
+                        throw new Error(`PDF zu klein: ${blob.size} bytes`);
+                    }
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                updateProgress(0);
+                updateStatus(`Error: ${error.message}`, 'error');
+                
+                // Try alternative method
+                setTimeout(() => {
+                    updateStatus('RETRY Versuche alternative Methode...', 'loading');
+                    openInNewTab();
+                }, 2000);
+                
+                btn.innerHTML = 'RETRY Erneut versuchen';
+                btn.disabled = false;
+            }
+        }
+        
+        function openInNewTab() {
+            const url = `/api/invoices/${invoiceId}/download-pdf`;
+            window.open(url, '_blank');
+            updateStatus('PDF PDF wird in neuem Tab geöffnet...', 'success');
+        }
+        
+        // Auto-start download after 2 seconds
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                updateStatus('AUTO Automatischer Download startet in 2 Sekunden...', 'loading');
+                setTimeout(downloadPDF, 2000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Fix - Rechnung SH-3322</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 { color: #333; margin-bottom: 20px; }
+        .invoice-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+        .btn:active { transform: translateY(0); }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .loading { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .progress {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #28a745);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>PDF PDF Download Fix</h1>
+        
+        <div class="invoice-info">
+            <strong>Rechnung:</strong> SH-3322<br>
+            <strong>Kunde:</strong> E-Commerce Kunde #3322<br>
+            <strong>Betrag:</strong> €4.90
+        </div>
+        
+        <button class="btn" onclick="downloadPDF()" id="downloadBtn">
+            START PDF HERUNTERLADEN
+        </button>
+        
+        <div class="progress" id="progress" style="display: none;">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div id="status"></div>
+        
+        <div style="margin-top: 30px; font-size: 14px; color: #666;">
+            <p><strong>Hinweis:</strong> Falls der Download nicht automatisch startet, 
+            versuchen Sie es mit einem anderen Browser oder deaktivieren Sie den Popup-Blocker.</p>
+        </div>
+    </div>
+
+    <script>
+        let downloadAttempts = 0;
+        const maxAttempts = 3;
+
+        function updateStatus(message, type = 'loading') {
+            const status = document.getElementById('status');
+            status.className = type;
+            status.innerHTML = message;
+            status.style.display = 'block';
+        }
+
+        function updateProgress(percent) {
+            const progress = document.getElementById('progress');
+            const progressBar = document.getElementById('progressBar');
+            
+            if (percent > 0) {
+                progress.style.display = 'block';
+                progressBar.style.width = percent + '%';
+            } else {
+                progress.style.display = 'none';
+            }
+        }
+
+        async function downloadPDF() {
+            downloadAttempts++;
+            const btn = document.getElementById('downloadBtn');
+            
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Generiere PDF...';
+            
+            updateStatus(`RETRY Versuch ${downloadAttempts}/${maxAttempts} - PDF wird generiert...`, 'loading');
+            updateProgress(20);
+
+            try {
+                // Method 1: Direct API call with authentication
+                updateProgress(40);
+                const response = await fetch('/api/invoices/inv-1760128245502-aqq4trk4p/download-pdf', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-user-info': JSON.stringify({
+                            id: 'admin-123',
+                            email: 'mgrdegh@web.de',
+                            firstName: 'Admin',
+                            lastName: 'User'
+                        }),
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+
+                updateProgress(60);
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+
+                if (response.ok) {
+                    updateProgress(80);
+                    const blob = await response.blob();
+                    console.log('Blob size:', blob.size, 'Type:', blob.type);
+
+                    if (blob.size > 100) { // Minimum reasonable PDF size
+                        updateProgress(100);
+                        
+                        // Create download link
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = 'Rechnung-SH-3322.pdf';
+                        link.style.display = 'none';
+                        
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // Clean up
+                        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+                        
+                        updateStatus(`PDF successfully downloaded! (${blob.size} bytes)`, 'success');
+                        updateProgress(0);
+                        
+                        btn.innerHTML = '✅ Erfolgreich!';
+                        setTimeout(() => {
+                            btn.innerHTML = 'START PDF HERUNTERLADEN';
+                            btn.disabled = false;
+                        }, 3000);
+                        
+                        return; // Success, exit function
+                    } else {
+                        throw new Error(`PDF zu klein: ${blob.size} bytes`);
+                    }
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Download attempt failed:', error);
+                updateProgress(0);
+                
+                if (downloadAttempts < maxAttempts) {
+                    updateStatus(`❌ Versuch ${downloadAttempts} fehlgeschlagen: ${error.message}. Versuche erneut...`, 'error');
+                    
+                    // Retry after delay
+                    setTimeout(() => {
+                        btn.innerHTML = 'RETRY Erneut versuchen';
+                        btn.disabled = false;
+                    }, 2000);
+                } else {
+                    // All attempts failed, try alternative method
+                    updateStatus('❌ Alle Versuche fehlgeschlagen. Versuche alternative Methode...', 'error');
+                    tryAlternativeMethod();
+                }
+            }
+        }
+
+        async function tryAlternativeMethod() {
+            updateStatus('RETRY Versuche alternative Download-Methode...', 'loading');
+            
+            try {
+                // Method 2: Direct window.open
+                const url = '/api/invoices/inv-1760128245502-aqq4trk4p/download-pdf';
+                window.open(url, '_blank');
+                
+                updateStatus('✅ Alternative Methode gestartet. Prüfen Sie Ihre Downloads!', 'success');
+                
+                const btn = document.getElementById('downloadBtn');
+                btn.innerHTML = 'START PDF HERUNTERLADEN';
+                btn.disabled = false;
+                
+            } catch (error) {
+                updateStatus(`❌ Auch alternative Methode fehlgeschlagen: ${error.message}`, 'error');
+                
+                const btn = document.getElementById('downloadBtn');
+                btn.innerHTML = '❌ Fehlgeschlagen';
+                
+                // Show manual link as last resort
+                setTimeout(() => {
+                    const status = document.getElementById('status');
+                    status.innerHTML = `
+                        <div class="error">
+                            ❌ Automatischer Download fehlgeschlagen.<br><br>
+                            <strong>Manueller Download:</strong><br>
+                            <a href="/api/invoices/inv-1760128245502-aqq4trk4p/download-pdf" 
+                               target="_blank" style="color: #007bff; text-decoration: underline;">
+                               Hier klicken für direkten Download
+                            </a>
+                        </div>
+                    `;
+                }, 2000);
+            }
+        }
+
+        // Auto-start download after page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                updateStatus('AUTO Automatischer Download startet in 3 Sekunden...', 'loading');
+                setTimeout(downloadPDF, 3000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
